@@ -1,91 +1,50 @@
-import 'package:flutter/material.dart';
+Practical 56
 
-class LoginPage extends StatefulWidget {
-  @override
-  State<LoginPage> createState() => _LoginPageState();
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity >=0.7.0 <0.9.0;
+
+// Custom Errors
+error InsufficientDonationAmount(address sender, uint amt);
+error InsufficientAmount();
+
+contract Donation {
+
+    address owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Modifier
+    modifier only_owner(){
+        require(msg.sender == owner, "You're not the owner");
+        _;
+    }
+
+    // Donate Function
+    function donate() public payable {
+
+        if(msg.value == 0){
+            revert InsufficientDonationAmount(msg.sender, msg.value);
+        }
+
+        if(msg.sender.balance <= 85e18){
+            revert InsufficientAmount();
+        }
+    }
+
+    // Withdraw Function
+    function withdraw() public payable only_owner returns(bool){
+
+        uint ctr_bal = address(this).balance;
+
+        (bool success,) = owner.call{value: ctr_bal}("");
+
+        return success;
+    }
+
+    // View Balance
+    function viewMyBalance() public view returns(uint){
+        return msg.sender.balance;
+    }
 }
-
-class _LoginPageState extends State<LoginPage> {
-  TextEditingController username = TextEditingController();
-  TextEditingController password = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.account_circle,
-              size: 80,
-              color: Colors.black,
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: username,
-              decoration: InputDecoration(
-                labelText: "Username",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: password,
-              decoration: const InputDecoration(
-                labelText: "Password",
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                String name = username.text.trim();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WelcomePage(username: name),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              child: const Text(
-                "Login",
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class WelcomePage extends StatelessWidget {
-  final String username;
-
-  WelcomePage({required this.username});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Container(
-          color: Colors.white,
-          child: Text(
-            "Welcome to our home page $username",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
